@@ -34,7 +34,7 @@ var ledgerBridge = null;
 var ledgerComm   = null;
 
 var networks = {
-  devnet: {
+  testnet: {
     nethash: "578e820911f24e039733b45e4882b73e301f813a0d2c31330dafda84534ffa23",
     peers: [
       "167.114.29.51:4002",
@@ -44,57 +44,13 @@ var networks = {
       "167.114.29.55:4002"
     ]
   },
-  mainnet: {
-    nethash: "6e84d08bd299ed97c212c886c98a57e36545c8f5d645ca7eeae63a8bd62d8988",
+  devnet: {
+    nethash: "",
     peers: [
-      "5.39.9.240:4001",
-      "5.39.9.241:4001",
-      "5.39.9.242:4001",
-      "5.39.9.243:4001",
-      "5.39.9.244:4001",
-      "5.39.9.250:4001",
-      "5.39.9.251:4001",
-      "5.39.9.252:4001",
-      "5.39.9.253:4001",
-      "5.39.9.254:4001",
-      "5.39.9.255:4001",
-      "5.39.53.48:4001",
-      "5.39.53.49:4001",
-      "5.39.53.50:4001",
-      "5.39.53.51:4001",
-      "5.39.53.52:4001",
-      "5.39.53.53:4001",
-      "5.39.53.54:4001",
-      "5.39.53.55:4001",
-      "37.59.129.160:4001",
-      "37.59.129.161:4001",
-      "37.59.129.162:4001",
-      "37.59.129.163:4001",
-      "37.59.129.164:4001",
-      "37.59.129.165:4001",
-      "37.59.129.166:4001",
-      "37.59.129.167:4001",
-      "37.59.129.168:4001",
-      "37.59.129.169:4001",
-      "37.59.129.170:4001",
-      "37.59.129.171:4001",
-      "37.59.129.172:4001",
-      "37.59.129.173:4001",
-      "37.59.129.174:4001",
-      "37.59.129.175:4001",
-      "193.70.72.80:4001",
-      "193.70.72.81:4001",
-      "193.70.72.82:4001",
-      "193.70.72.83:4001",
-      "193.70.72.84:4001",
-      "193.70.72.85:4001",
-      "193.70.72.86:4001",
-      "193.70.72.87:4001",
-      "193.70.72.88:4001",
-      "193.70.72.89:4001",
-      "193.70.72.90:4001"
+      "127.0.0.1:4000"
     ]
   }
+
 };
 
 function getNetworkFromNethash(nethash){
@@ -370,7 +326,7 @@ vorpal
     connect2network(network,function(){
       getFromNode('http://'+server+'/peer/status', function(err, response, body){
         self.log("Node: " + server + ", height: " + JSON.parse(body).height);
-        self.delimiter('ark '+args.network+'>');
+        self.delimiter('persona '+args.network+'>');
         arkjs.crypto.setNetworkVersion(network.config.version);
         callback();
       });
@@ -406,7 +362,7 @@ vorpal
       if(err){
         self.log(colors.red("Public API unreacheable on this server "+server+" - "+err));
         server=null;
-        self.delimiter('ark>');
+        self.delimiter('persona>');
         return callback();
       }
       try {
@@ -416,7 +372,7 @@ vorpal
         self.log(colors.red("API is not returning expected result:"));
         self.log(body);
         server=null;
-        self.delimiter('ark>');
+        self.delimiter('persona>');
         return callback();
       }
 
@@ -434,7 +390,7 @@ vorpal
         console.log(network.config);
       });
       self.log("Connected to network " + nethash + colors.green(" ("+networkname+")"));
-      self.delimiter('ark '+server+'>');
+      self.delimiter('persona '+server+'>');
       getFromNode('http://'+server+'/peer/status', function(err, response, body){
         self.log("Node height ", JSON.parse(body).height);
       });
@@ -447,7 +403,7 @@ vorpal
   .action(function(args, callback) {
 		var self = this;
     self.log("Disconnected from "+server);
-    self.delimiter('ark>');
+    self.delimiter('persona>');
     server=null;
     network=null;
     callback();
@@ -958,6 +914,18 @@ vorpal
     });
   });
 
+vorpal
+  .command('account register <firstname> <lastname>', 'Registers the name provided with the account/address')
+  .action(function(args, callback){
+    var self = this;
+    if(!server){
+      self.log("please connect to node or network before");
+      return callback();
+    }
+
+
+
+  });
 
 vorpal
   .command('account create', 'Generate a new random cold account')
@@ -1069,36 +1037,11 @@ vorpal
     });
 
   });
-var sharkspinner;
-vorpal
-  .command("shARK", "No you don't want to use this command")
-  .action(function(args, callback) {
-		var self = this;
-    self.log(colors.red(figlet.textSync("shARK")));
-    sharkspinner = ora({text:"Watch out, the shARK attack!",spinner:"shark"}).start();
-    callback();
-  });
+
+vorpal.history('persona-client');
+
+vorpal.log(colors.cyan(figlet.textSync("Persona Client","Slant")));
 
 vorpal
-  .command("spARKaaaaa!")
-  .hidden()
-  .action(function(args, callback) {
-    var time = 0;
-    var self=this;
-    sharkspinner && sharkspinner.stop();
-    ["tux","meow","bunny","cower","dragon-and-cow"].forEach(function(spark){
-      setTimeout(function(){
-        self.log(cowsay.say({text:"SPAAAAARKKKAAAAAAA!", f:spark}));
-  		}, time++*1000);
-    });
-
-    callback();
-  });
-
-vorpal.history('ark-client');
-
-vorpal.log(colors.cyan(figlet.textSync("Ark Client","Slant")));
-
-vorpal
-  .delimiter('ark>')
+  .delimiter('persona>')
   .show();
