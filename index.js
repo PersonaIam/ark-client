@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var arkjs = require("arkjs");
+var personajs = require("personajs");
 var crypto = require("crypto");
 var figlet = require("figlet");
 var colors = require("colors");
@@ -44,10 +44,10 @@ var networks = {
       "167.114.29.55:4002"
     ]
   },
-  devnet: {
-    nethash: "",
+  localnet: {
+    nethash: "c0a05e20f07438ea30e20bf38855f2cf204d2d5706ac152d83496e625bee3d5b",
     peers: [
-      "127.0.0.1:4000"
+      "127.0.0.1:4100"
     ]
   }
 
@@ -105,7 +105,7 @@ function postTransaction(container, transaction, cb){
     }, cb);
   };
 
-  let senderAddress = arkjs.crypto.getAddress(transaction.senderPublicKey);
+  let senderAddress = personajs.crypto.getAddress(transaction.senderPublicKey);
   getFromNode('http://' + server + '/api/accounts?address=' + senderAddress, function(err, response, body){
     if(!body) {
       performPost();
@@ -118,9 +118,9 @@ function postTransaction(container, transaction, cb){
           message: 'Second passphrase: ',
         }, function(result) {
           if (result.passphrase) {
-            var secondKeys = arkjs.crypto.getKeys(result.passphrase);
-            arkjs.crypto.secondSign(transaction, secondKeys);
-            transaction.id = arkjs.crypto.getId(transaction);
+            var secondKeys = personajs.crypto.getKeys(result.passphrase);
+            personajs.crypto.secondSign(transaction, secondKeys);
+            transaction.id = personajs.crypto.getId(transaction);
             performPost();
           } else {
             vorpal.log('No second passphrase given. Trying without.');
@@ -223,7 +223,7 @@ async function populateLedgerAccounts() {
         (response) => { result = response }
       );
       if (result.publicKey) {
-        result.address = arkjs.crypto.getAddress(result.publicKey);
+        result.address = personajs.crypto.getAddress(result.publicKey);
         var accountData = null;
         await requestPromise({
           uri: 'http://' + server + '/api/accounts?address=' + result.address,
@@ -275,7 +275,7 @@ async function ledgerSignTransaction(seriesCb, transaction, account, callback) {
   }
   transaction.senderPublicKey = account.publicKey;
   delete transaction.signature;
-  var transactionHex = arkjs.crypto.getBytes(transaction, true, true).toString("hex");
+  var transactionHex = personajs.crypto.getBytes(transaction, true, true).toString("hex");
   var result = null;
   console.log('Please sign the transaction on your Ledger');
   await ledgerBridge.signTransaction_async(account.path, transactionHex).then(
@@ -287,7 +287,7 @@ async function ledgerSignTransaction(seriesCb, transaction, account, callback) {
     return seriesCb('We could not sign the transaction. Close everything using the Ledger and try again.');
   } else if (result.signature) {
     transaction.signature = result.signature;
-    transaction.id = arkjs.crypto.getId(transaction);
+    transaction.id = personajs.crypto.getId(transaction);
   } else {
     transaction = null;
   }
@@ -327,7 +327,7 @@ vorpal
       getFromNode('http://'+server+'/peer/status', function(err, response, body){
         self.log("Node: " + server + ", height: " + JSON.parse(body).height);
         self.delimiter('persona '+args.network+'>');
-        arkjs.crypto.setNetworkVersion(network.config.version);
+        personajs.crypto.setNetworkVersion(network.config.version);
         callback();
       });
     });
@@ -554,9 +554,9 @@ vorpal
         var passphrase = '';
         if (account.passphrase) {
           passphrase = account.passphrase;
-          var keys = arkjs.crypto.getKeys(passphrase);
+          var keys = personajs.crypto.getKeys(passphrase);
           publicKey = keys.publicKey;
-          address = arkjs.crypto.getAddress(publicKey);
+          address = personajs.crypto.getAddress(publicKey);
         } else if (account.publicKey) {
           address = account.address;
           publicKey = account.publicKey;
@@ -593,7 +593,7 @@ vorpal
             }, function(result){
               if (result.continue) {
                 if (currentVote) {
-                  var unvoteTransaction = arkjs.vote.createVote(passphrase, ['-'+currentVote.publicKey]);
+                  var unvoteTransaction = personajs.vote.createVote(passphrase, ['-'+currentVote.publicKey]);
                   ledgerSignTransaction(seriesCb, unvoteTransaction, account, function(unvoteTransaction) {
                     if (!unvoteTransaction) {
                       return seriesCb('Failed to sign unvote transaction with ledger');
@@ -614,7 +614,7 @@ vorpal
                             return seriesCb('Failed to fetch unconfirmed transaction: ' + body.error);
                           } else if (body.transaction) {
                             clearInterval(checkTransactionTimerId);
-                            var transaction = arkjs.vote.createVote(passphrase, ['+'+newDelegate.publicKey]);
+                            var transaction = personajs.vote.createVote(passphrase, ['+'+newDelegate.publicKey]);
                             ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
                               if (!transaction) {
                                 return seriesCb('Failed to sign vote transaction with ledger');
@@ -627,7 +627,7 @@ vorpal
                     });
                   });
                 } else {
-                  var transaction = arkjs.vote.createVote(passphrase, ['+'+newDelegate.publicKey]);
+                  var transaction = personajs.vote.createVote(passphrase, ['+'+newDelegate.publicKey]);
                   ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
                     if (!transaction) {
                       return seriesCb('Failed to sign transaction with ledger');
@@ -684,9 +684,9 @@ vorpal
         var passphrase = '';
         if (account.passphrase) {
           passphrase = account.passphrase;
-          var keys = arkjs.crypto.getKeys(passphrase);
+          var keys = personajs.crypto.getKeys(passphrase);
           publicKey = keys.publicKey;
-          address = arkjs.crypto.getAddress(publicKey);
+          address = personajs.crypto.getAddress(publicKey);
         } else if (account.publicKey) {
           address = account.address;
           publicKey = account.publicKey;
@@ -710,7 +710,7 @@ vorpal
             message: 'Removing last vote for ' + lastDelegate.username,
           }, function(result){
             if (result.continue) {
-              var transaction = arkjs.vote.createVote(passphrase, delegates);
+              var transaction = personajs.vote.createVote(passphrase, delegates);
               ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
                 if (!transaction) {
                   return seriesCb('Failed to sign transaction with ledger');
@@ -790,9 +790,9 @@ vorpal
         var passphrase = '';
         if (account.passphrase) {
           passphrase = account.passphrase;
-          var keys = arkjs.crypto.getKeys(passphrase);
+          var keys = personajs.crypto.getKeys(passphrase);
           publicKey = keys.publicKey;
-          address = arkjs.crypto.getAddress(publicKey);
+          address = personajs.crypto.getAddress(publicKey);
         } else if (account.publicKey) {
           address = account.address;
           publicKey = account.publicKey;
@@ -818,7 +818,7 @@ vorpal
           message: 'Sending '+arkAmountString+network.config.token+' '+(currency?'('+currency+args.amount+') ':'')+'to '+args.address+' now',
         }, function(result){
           if (result.continue) {
-            var transaction = arkjs.transaction.createTransaction(args.address, arkamount, null, passphrase);
+            var transaction = personajs.transaction.createTransaction(args.address, arkamount, null, passphrase);
             ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');
@@ -873,16 +873,16 @@ vorpal
         var passphrase = '';
         if (account.passphrase) {
           passphrase = account.passphrase;
-          var keys = arkjs.crypto.getKeys(passphrase);
+          var keys = personajs.crypto.getKeys(passphrase);
           publicKey = keys.publicKey;
-          address = arkjs.crypto.getAddress(publicKey);
+          address = personajs.crypto.getAddress(publicKey);
         } else if (account.publicKey) {
           address = account.address;
           publicKey = account.publicKey;
         } else {
           return seriesCb('No public key for account');
         }
-        var transaction = arkjs.delegate.createDelegate(passphrase, args.username);
+        var transaction = personajs.delegate.createDelegate(passphrase, args.username);
         ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
           if (!transaction) {
             return seriesCb('Failed to sign transaction with ledger');
@@ -923,8 +923,31 @@ vorpal
       return callback();
     }
 
+    async.waterfall([
+      function (seriesCb) {
+        getAccount(self, seriesCb);
+      },
+      function (account, seriesCb) {
+        var address = null;
+        var publicKey = null;
+        var passphrase = '';
+        if (account.passphrase) {
+          passphrase = account.passphrase;
+          var keys = personajs.crypto.getKeys(passphrase);
+          publicKey = keys.publicKey;
+          address = personajs.crypto.getAddress(publicKey);
+        } else if (account.publicKey) {
+          address = account.address;
+          publicKey = account.publicKey;
+        } else {
+          return seriesCb('No public key for account');
+        }
 
+        var fName = args.firstname;
+        var lName = arg.lastname;
 
+      }
+    ]);
   });
 
 vorpal
@@ -937,8 +960,8 @@ vorpal
     }
     var passphrase = require("bip39").generateMnemonic();
 		self.log("Seed    - private:",passphrase);
-		self.log("WIF     - private:",arkjs.crypto.getKeys(passphrase).toWIF());
-		self.log("Address - public :",arkjs.crypto.getAddress(arkjs.crypto.getKeys(passphrase).publicKey));
+		self.log("WIF     - private:",personajs.crypto.getKeys(passphrase).toWIF());
+		self.log("Address - public :",personajs.crypto.getAddress(personajs.crypto.getKeys(passphrase).publicKey));
 		callback();
   });
 
@@ -965,8 +988,8 @@ vorpal
           var passphrase = message.passphrase;
           self.log("Found after",count,"passphrases tested");
           self.log("Seed    - private:",passphrase);
-          self.log("WIF     - private:",arkjs.crypto.getKeys(passphrase).toWIF());
-          self.log("Address - public :",arkjs.crypto.getAddress(arkjs.crypto.getKeys(passphrase).publicKey));
+          self.log("WIF     - private:",personajs.crypto.getKeys(passphrase).toWIF());
+          self.log("Address - public :",personajs.crypto.getAddress(personajs.crypto.getKeys(passphrase).publicKey));
 
           for(var killid in cps){
             cps[killid].kill();
@@ -995,9 +1018,9 @@ vorpal
       if (result.passphrase) {
         var hash = crypto.createHash('sha256');
         hash = hash.update(new Buffer(args.message,"utf-8")).digest();
-        self.log("public key: ",arkjs.crypto.getKeys(result.passphrase).publicKey);
-        self.log("address   : ",arkjs.crypto.getAddress(arkjs.crypto.getKeys(result.passphrase).publicKey));
-        self.log("signature : ",arkjs.crypto.getKeys(result.passphrase).sign(hash).toDER().toString("hex"));
+        self.log("public key: ",personajs.crypto.getKeys(result.passphrase).publicKey);
+        self.log("address   : ",personajs.crypto.getAddress(personajs.crypto.getKeys(result.passphrase).publicKey));
+        self.log("signature : ",personajs.crypto.getKeys(result.passphrase).sign(hash).toDER().toString("hex"));
 
       } else {
         self.log('Aborted.');
@@ -1021,8 +1044,8 @@ vorpal
           hash = hash.update(new Buffer(args.message,"utf-8")).digest();
           var signature = new Buffer(result.signature, "hex");
         	var publickey= new Buffer(args.publickey, "hex");
-        	var ecpair = arkjs.ECPair.fromPublicKeyBuffer(publickey);
-        	var ecsignature = arkjs.ECSignature.fromDER(signature);
+        	var ecpair = personajs.ECPair.fromPublicKeyBuffer(publickey);
+        	var ecsignature = personajs.ECSignature.fromDER(signature);
         	var res = ecpair.verify(hash, ecsignature);
           self.log(res);
         }
