@@ -152,14 +152,15 @@ function getFromNode(url, cb){
 
 function getIdentity(self, ownerAddress, cb) {
   getFromNode('http://' + server + '/api/identity/get/?address=' + ownerAddress, function (err, response, body) {
-    if(err){
-      self.log(colors.red("Public API unreacheable on this server "+server+" - "+err));
-      server=null;
+    if (err) {
+      self.log(colors.red("Public API unreacheable on this server " + server + " - " + err));
+      server = null;
       self.delimiter('persona>');
       return cb();
     }
 
-    return cb(response.fragments);
+    body = JSON.parse(body);
+    return cb(body.fragments);
   });
 }
 
@@ -937,13 +938,39 @@ vorpal
     }
 
     var address = args.address;
-    var idFragments = null; 
+    var idFragments = null;
+    var toVerify = null;
 
     async.waterfall([
-      function(seriesCb) {
-        getIdentity(self, address, function(identity) {
-          self.log(identity);
-          return seriesCb();
+      function (seriesCb) {
+        getIdentity(self, address, function (identity) {
+          if (!identity)
+            return seriesCb("Failed to retrieve identity");
+
+          idFragments = identity;
+          self.log("Id fragments retrieved for address: " + address + "\n");
+
+          idFragments.forEach(function (item) {
+            self.log("ID: " + item.id + " - " + "data: " + item.data);
+          });
+
+          self.log("\n");
+
+          self.prompt({
+            type: 'input',
+            name: 'id',
+            message: 'Please select the ID you wish to certify: ',
+          }, function (result) {
+            var found = idFragments.find(function (elem) {
+              return elem.id == result.id;
+            });
+
+            if (!found)
+              return seriesCb(colors.red("Incorect ID."));
+
+            toVerify = found.id;
+            return seriesCb();
+          });
         });
       },
       function (seriesCb) {
@@ -965,9 +992,25 @@ vorpal
           return seriesCb('No public key for account');
         }
 
-        // get list of ids for address
-        // select from list the address that is going to be verified
-        // send signed identity transasction
+        self.prompt({
+          type: 'confirm',
+          name: 'continue',
+          default: false,
+          message: "Verifying ID: " + toVerify + " for address " + address
+        }, function (result) {
+          if (result.continue) {
+            // send signed identity transasction
+            var transaction = personajs.verify.createVerification(passphrase, address, toVerify);
+            ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
+              if (!transaction) {
+                return seriesCb('Failed to sign transaction with ledger');
+              }
+              return seriesCb(null, transaction);
+            });
+          } else {
+            return seriesCb("Aborted.")
+          }
+        });
       },
       function (transaction, seriesCb) {
         postTransaction(self, transaction, function (err, response, body) {
