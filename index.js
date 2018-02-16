@@ -150,6 +150,19 @@ function getFromNode(url, cb){
   );
 }
 
+function getIdentity(self, ownerAddress, cb) {
+  getFromNode('http://' + server + '/api/identity/get/?address=' + ownerAddress, function (err, response, body) {
+    if(err){
+      self.log(colors.red("Public API unreacheable on this server "+server+" - "+err));
+      server=null;
+      self.delimiter('persona>');
+      return cb();
+    }
+
+    return cb(response.fragments);
+  });
+}
+
 function getARKTicker(currency){
   request({url: "https://api.coinmarketcap.com/v1/ticker/ark/?convert="+currency}, function(err, response, body){
     arkticker[currency]=JSON.parse(body)[0];
@@ -909,6 +922,72 @@ vorpal
       }
       else{
         self.log(colors.green("Transaction sent successfully with id "+transaction.id));
+      }
+      return callback();
+    });
+  });
+
+vorpal
+  .command('account verify <address>', 'Verify the identity of address')
+  .action(function (args, callback) {
+    var self = this;
+    if (!server) {
+      self.log("please connect to node or network before");
+      return callback();
+    }
+
+    var address = args.address;
+    var idFragments = null; 
+
+    async.waterfall([
+      function(seriesCb) {
+        getIdentity(self, address, function(identity) {
+          self.log(identity);
+          return seriesCb();
+        });
+      },
+      function (seriesCb) {
+        getAccount(self, seriesCb);
+      },
+      function (account, seriesCb) {
+        var address = null;
+        var publicKey = null;
+        var passphrase = '';
+        if (account.passphrase) {
+          passphrase = account.passphrase;
+          var keys = personajs.crypto.getKeys(passphrase);
+          publicKey = keys.publicKey;
+          address = personajs.crypto.getAddress(publicKey);
+        } else if (account.publicKey) {
+          address = account.address;
+          publicKey = account.publicKey;
+        } else {
+          return seriesCb('No public key for account');
+        }
+
+        // get list of ids for address
+        // select from list the address that is going to be verified
+        // send signed identity transasction
+      },
+      function (transaction, seriesCb) {
+        postTransaction(self, transaction, function (err, response, body) {
+          if (err) {
+            seriesCb("Failed to send transaction: " + err);
+          }
+          else if (body.success) {
+            seriesCb(null, transaction);
+          }
+          else {
+            seriesCb("Failed to send transaction: " + body.error);
+          }
+        });
+      }
+    ], function (err, transaction) {
+      if (err) {
+        self.log(colors.red(err));
+      }
+      else {
+        self.log(colors.green("Transaction sent successfully with id " + transaction.id));
       }
       return callback();
     });
