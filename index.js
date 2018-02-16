@@ -918,7 +918,7 @@ vorpal
   .command('account register <firstname> <lastname>', 'Registers the name provided with the account/address')
   .action(function(args, callback){
     var self = this;
-    if(!server){
+    if (!server) {
       self.log("please connect to node or network before");
       return callback();
     }
@@ -943,11 +943,53 @@ vorpal
           return seriesCb('No public key for account');
         }
 
-        var fName = args.firstname;
-        var lName = arg.lastname;
+        var data = {
+          firstname: args.firstname,
+          lastname: args.lastname
+        };
 
+        self.prompt({
+          type: 'confirm',
+          name: 'continue',
+          default: false,
+          message: "Registering " + data.firstname + " " + data.lastname + " as your name to " + address
+        }, function (result) {
+          if (result.continue) {
+
+            var transaction = personajs.register.createRegistration(passphrase, 0, JSON.stringify(data));
+            ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
+              if (!transaction) {
+                return seriesCb('Failed to sign transaction with ledger');
+              }
+              return seriesCb(null, transaction);
+            });
+          } else {
+            return seriesCb("Aborted.")
+          }
+        });
+      },
+      function (transaction, seriesCb) {
+        postTransaction(self, transaction, function (err, response, body) {
+          if (err) {
+            seriesCb("Failed to send transaction: " + err);
+          }
+          else if (body.success) {
+            seriesCb(null, transaction);
+          }
+          else {
+            seriesCb("Failed to send transaction: " + body.error);
+          }
+        });
       }
-    ]);
+    ], function (err, transaction) {
+      if (err) {
+        self.log(colors.red(err));
+      }
+      else {
+        self.log(colors.green("Transaction sent successfully with id " + transaction.id));
+      }
+      return callback();
+    });
   });
 
 vorpal
