@@ -1,8 +1,8 @@
-![ARK Client](https://i.imgur.com/Sj3s29m.jpg)
+<!-- ![ARK Client](https://i.imgur.com/Sj3s29m.jpg) -->
 
-# ark-client
-CLI client for ARK blockchain.
-You can connect to devnet, mainnet or your custom private/public ARK-derived blockchain.
+# persona-client
+CLI client for the Persona blockchain.
+You can connect to devnet, mainnet or your custom private/public Persona/ARK-derived blockchain.
 
 Features:
 - connection to network or a node,
@@ -17,20 +17,20 @@ Features:
 # Installation
 You need to have node (version 7.6.0 or newer) installed. Then:
 ```
-$> npm install -g arkecosystem/ark-client#master
-$> ark-client
-    ___         __      _________            __
-   /   |  _____/ /__   / ____/ (_)__  ____  / /_
-  / /| | / ___/ //_/  / /   / / / _ \/ __ \/ __/
- / ___ |/ /  / ,<    / /___/ / /  __/ / / / /_  
-/_/  |_/_/  /_/|_|   \____/_/_/\___/_/ /_/\__/  
+$> npm install -g personaIam/persona-js#persona-dev
+$> persona-client
+    ____                                      _________            __
+   / __ \___  ______________  ____  ____ _   / ____/ (_)__  ____  / /_
+  / /_/ / _ \/ ___/ ___/ __ \/ __ \/ __ `/  / /   / / / _ \/ __ \/ __/
+ / ____/  __/ /  (__  ) /_/ / / / / /_/ /  / /___/ / /  __/ / / / /_
+/_/    \___/_/  /____/\____/_/ /_/\__,_/   \____/_/_/\___/_/ /_/\__/
 
-ark>
+persona>
 ```
 
 # Usage
 ```
-ark> help
+persona> help
 
   Commands:
 
@@ -54,33 +54,33 @@ ark> help
 
 
 ```
-ark> connect devnet
+persona> connect testnet
 Node: 5.39.9.246:4002, height: 21078
-ark devnet>
+persona testnet>
 ```
 
 ```
-ark devnet> account create
-Seed    - private: rely cup brand sentence wolf amateur clog knock execute avocado they ready
-WIF     - private: SBHAcXWeCEBDaLVUm4B3idHoLde2qrmi2gkxz8KXtNYfjVMK16pH
-Address - public : DMUeELFkFtN5obvStkV9Zt44GEjEaYgKhH
+persona testnet> account create
+Seed    - private: forum inch panel balcony beyond note assist seminar bird blame vehicle feel
+WIF     - private: S9s7rLszCxEMnDkNPQ8HKBMohCBnnFVF7hsL5HkFaYai3W3tW4P3
+Address - public : PMxxtvwbjpdhRgqaBeVjYMMMqRwBQnEQ94
 ```
 
 ```
-ark devnet> account send 100 AMUeELFkFtN5obvStkV9Zt44GEjEaYgKhH
+persona testnet> account send 100 AMUeELFkFtN5obvStkV9Zt44GEjEaYgKhH
 passphrase: ************************************************************************
 Transaction sent successfully with id 7adbf890c88dd345eacbac63e94610fa5f3905528cdc1c36740c3ba3fa3db302
 ```
 
 ```
-ark devnet> account delegate rockingark
+persona testnet> account delegate rockingark
 passphrase: **************************************************************************
 Transaction sent successfully with id b857f302611e4f36a33ea886f7bcb951633406ba1f5e40393893234a46ce54eb
 ```
 
 ```
-ark devnet> account status DMUeELFkFtN5obvStkV9Zt44GEjEaYgKhH
-{ address: 'DMUeELFkFtN5obvStkV9Zt44GEjEaYgKhH',
+persona testnet> account status PMxxtvwbjpdhRgqaBeVjYMMMqRwBQnEQ94
+{ address: 'PMxxtvwbjpdhRgqaBeVjYMMMqRwBQnEQ94',
   unconfirmedBalance: '7500000000',
   balance: '7500000000',
   publicKey: '020cfc61215f2682bd70cce14aaa6cfa6fa3b0507771cb1943aee071a7dd57bcf6',

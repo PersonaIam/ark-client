@@ -37,11 +37,11 @@ var networks = {
   testnet: {
     nethash: "1e3d1b397d99f472d6b49c4f670ae917a13084708001dcf77249b136f88751e3",
     peers: [
-      "5.135.75.64:4100",
-      "5.135.75.65:4100",
-      "5.135.75.66:4100",
-      "54.37.188.112:4100",
-      "54.37.188.112:4100"
+      "5.135.75.64:4101",
+      "5.135.75.65:4101",
+      "5.135.75.66:4101",
+      "54.37.188.112:4101",
+      "54.37.188.112:4101"
     ]
   },
   localnet: {
@@ -950,20 +950,18 @@ vorpal
           idFragments = identity;
           self.log("Id fragments retrieved for address: " + address + "\n");
 
-          idFragments.forEach(function (item) {
-            self.log("ID: " + item.id + " - " + "data: " + item.data);
+          idFragments.forEach(function (item, i) {
+            self.log("ID " + i +": " + item.id + " - " + "data: " + item.data);
           });
 
           self.log("\n");
 
           self.prompt({
             type: 'input',
-            name: 'id',
+            name: 'idx',
             message: 'Please select the ID you wish to certify: ',
           }, function (result) {
-            var found = idFragments.find(function (elem) {
-              return elem.id == result.id;
-            });
+            var found = idFragments[result.idx];
 
             if (!found)
               return seriesCb(colors.red("Incorect ID."));
