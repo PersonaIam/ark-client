@@ -762,7 +762,7 @@ vorpal
   });
 
 vorpal
-  .command('account send <amount> <address>', 'Send <amount> ark to <address>. <amount> format examples: 10, USD10.4, EUR100')
+  .command('account send <amount> <address>', 'Send <amount> persona tokens to <address>. <amount> format examples: 10')
   .action(function(args, callback) {
 		var self = this;
     if(!server){
@@ -774,6 +774,9 @@ vorpal
 
     if(typeof args.amount != "number")
     {
+
+      self.log("Please use numeric amount");
+      return callback();
 
       for(var i in currencies)
       {

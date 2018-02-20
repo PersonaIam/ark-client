@@ -8,8 +8,9 @@ Features:
 - connection to network or a node,
 - get stats of a network,
 - create or get status of an account,
+- register a name with an account,
+- verify other acounts` identity,
 - create vanity accounts (multi-cpu supported),
-- send amount in USD, EUR or other FIAT currency at the market price (ARK only),
 - register a delegate,
 - vote for a delegate,
 - sign and verify message using your address.
@@ -42,20 +43,21 @@ persona> help
     network stats                         Get stats from network
     account status <address>              Get account status
     account vote <name>                   Vote for delegate <name>. Remove previous vote if needed. Leave empty to clear vote
-    account send <amount> <recipient>     Send <amount> ark to <recipient>. <amount> format examples: 10, USD10.4, EUR100
+    account send <amount> <recipient>     Send <amount> persona tokens to <recipient>. <amount> format examples: 10
     account delegate <username>           Register new delegate with <username>
     account create                        Generate a new random cold account
+    account register <first> <last>       Register the name provided with the account
+    account verify <address>              Verify the identity of address
     account vanity <string>               Generate an address containing lowercased <string> (WARNING you could wait for long)
     message sign <message>                Sign a message
     message verify <message> <publickey>  Verify the <message> signed by the owner of <publickey> (you will be prompted to provide the signature)
-    shARK                                 No you don't want to use this command
 ```
 
 
 
 ```
 persona> connect testnet
-Node: 5.39.9.246:4002, height: 21078
+Node: 5.135.75.64:4101, height: 1708
 persona testnet>
 ```
 
