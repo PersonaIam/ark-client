@@ -940,18 +940,18 @@ vorpal
       return callback();
     }
 
-    var address = args.address;
+    var toVerifyAddress = args.address;
     var idFragments = null;
     var toVerify = null;
 
     async.waterfall([
       function (seriesCb) {
-        getIdentity(self, address, function (identity) {
+        getIdentity(self, toVerifyAddress, function (identity) {
           if (!identity)
             return seriesCb("Failed to retrieve identity");
 
           idFragments = identity;
-          self.log("Id fragments retrieved for address: " + address + "\n");
+          self.log("Id fragments retrieved for address: " + toVerifyAddress + "\n");
 
           idFragments.forEach(function (item, i) {
             self.log("ID " + i +": " + item.id + " - " + "data: " + item.data);
@@ -997,11 +997,11 @@ vorpal
           type: 'confirm',
           name: 'continue',
           default: false,
-          message: "Verifying ID: " + toVerify + " for address " + address
+          message: "Verifying ID: " + toVerify + " for address " + toVerifyAddress
         }, function (result) {
           if (result.continue) {
             // send signed identity transasction
-            var transaction = personajs.verify.createVerification(passphrase, address, toVerify);
+            var transaction = personajs.verify.createVerification(passphrase, toVerifyAddress, toVerify);
             ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');
