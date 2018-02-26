@@ -1039,7 +1039,7 @@ vorpal
 
 vorpal
   .command('account register <firstname> <lastname>', 'Registers the name provided with the account/address')
-  .action(function(args, callback){
+  .action(function(args, callback) {
     var self = this;
     if (!server) {
       self.log("please connect to node or network before");
@@ -1128,6 +1128,65 @@ vorpal
 		self.log("WIF     - private:",personajs.crypto.getKeys(passphrase).toWIF());
 		self.log("Address - public :",personajs.crypto.getAddress(personajs.crypto.getKeys(passphrase).publicKey));
 		callback();
+  });
+
+vorpal
+  .command('account verifications <address>', 'Get all the verifications for address')
+  .action(function (args, callback) {
+    var self = this;
+    if (!server) {
+      self.log("please connect to node or network before");
+      return callback();
+    }
+
+    var address = args.address;
+
+    getIdentity(self, address, function (identity) {
+      if (!identity) {
+        self.log(colors.red("Failed to retrieve identity"));
+        return callback();
+      }
+
+      var idFragments = identity;
+      var verifications = [];
+
+      async.each(idFragments, function (fragment, eachCb) {
+        getFromNode('http://' + server + '/api/identity/verifications?id=' + fragment.id, function (err, response, body) {
+          if (err) {
+            // add to an error list
+            return eachCb();
+          }
+
+          body = JSON.parse(body);
+          verifications.push({
+            id: fragment.id,
+            data: fragment.data,
+            verifications: body.verifications
+          });
+
+          return eachCb();
+        });
+      },
+        function (err) {
+          if (err) {
+            self.log(colors.red(err));
+          }
+
+          verifications.forEach(function (elem) {
+            self.log("\nVerifications for ID: " + colors.cyan(elem.id) + " with data: " + colors.cyan(elem.data) + ":");
+
+            if(elem.verifications.length == 0){
+              self.log(colors.red("No verifications."));
+              return;
+            }
+
+            elem.verifications.forEach(function(verif, idx) {
+              self.log(idx + ". Verifier: " + colors.yellow(verif.verifier) + " - signature: " + colors.red(verif.signature));
+            });
+          });
+          return callback();
+        });
+    });
   });
 
 vorpal
