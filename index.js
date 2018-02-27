@@ -27,7 +27,8 @@ var contrib = require('blessed-contrib');
 var server;
 var network;
 var arkticker = {};
-var currencies = ["USD","AUD", "BRL", "CAD", "CHF", "CNY", "EUR", "GBP", "HKD", "IDR", "INR", "JPY", "KRW", "MXN", "RUB"]
+var currencies = ["PRS"];
+var ticker = "PRS";
 
 var ledgerAccounts = [];
 var ledgerBridge = null;
@@ -769,25 +770,17 @@ vorpal
       self.log("please connect to node or network before");
       return callback();
     }
-    var currency;
+    var amount;
     var found = false;
 
     if(typeof args.amount != "number")
     {
 
-      self.log("Please use numeric amount");
-      return callback();
-
-      for(var i in currencies)
-      {
-        if(args.amount.startsWith(currencies[i]))
+      if (args.amount.startsWith(ticker))
         {
-          currency=currencies[i];
-          args.amount = Number(args.amount.replace(currency,""));
-          getARKTicker(currency);
-          found = true;
-          break;
-        }
+        args.amount = Number(args.amount.replace(ticker, ""));
+        amount = args.amount * 100000000;
+        found = true;
       }
 
       if(!found)
@@ -795,6 +788,8 @@ vorpal
         self.log("Invalid Currency Format");
         return callback();
       }
+    } else {
+      amount = args.amount;
     }
 
     async.waterfall([
@@ -817,25 +812,17 @@ vorpal
           return seriesCb('No public key for account');
         }
 
-        var arkamount = args.amount;
-        var arkAmountString = args.amount;
-
-        if(currency){
-          if(!arkticker[currency]){
-            return seriesCb("Can't get price from market. Aborted.");
-          }
-          arkamount = parseInt(args.amount * 100000000 / Number(arkticker[currency]["price_"+currency.toLowerCase()]))
-          arkAmountString = arkamount/100000000;
-        }
+        var prsAmount = amount/100000000;
+        var prompt = 'Sending ' + prsAmount + 'PRS to ' + args.address + ' now';
 
         self.prompt({
           type: 'confirm',
           name: 'continue',
           default: false,
-          message: 'Sending '+arkAmountString+network.config.token+' '+(currency?'('+currency+args.amount+') ':'')+'to '+args.address+' now',
+          message: prompt,
         }, function(result){
           if (result.continue) {
-            var transaction = personajs.transaction.createTransaction(args.address, arkamount, null, passphrase);
+            var transaction = personajs.transaction.createTransaction(args.address, amount, null, passphrase);
             ledgerSignTransaction(seriesCb, transaction, account, function(transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');

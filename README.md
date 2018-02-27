@@ -43,7 +43,7 @@ persona> help
     network stats                         Get stats from network
     account status <address>              Get account status
     account vote <name>                   Vote for delegate <name>. Remove previous vote if needed. Leave empty to clear vote
-    account send <amount> <recipient>     Send <amount> persona tokens to <recipient>. <amount> format examples: 10
+    account send <amount> <recipient>     Send <amount> persona tokens to <recipient>. <amount> format examples: PRS10, 100000
     account delegate <username>           Register new delegate with <username>
     account create                        Generate a new random cold account
     account register <first> <last>       Register the name provided with the account
