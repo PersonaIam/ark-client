@@ -81,6 +81,27 @@ Transaction sent successfully with id b857f302611e4f36a33ea886f7bcb951633406ba1f
 ```
 
 ```
+persona testnet> account register rick sanchez
+passphrase: *********************************************************************
+? Registering rick sanchez as your name to PNhiYW5Ledtu7wGEdSQGwrns8ddFYCBw1C Yes
+Transaction sent successfully with id a68bf5e7b07252005a588c7a35d0a8dacb9b4a26ac853058981680f5b6955b61
+```
+
+```
+persona testnet> account verify PNhiYW5Ledtu7wGEdSQGwrns8ddFYCBw1C
+Id fragments retrieved for address: PNhiYW5Ledtu7wGEdSQGwrns8ddFYCBw1C
+
+ID 0: 677120068a51b2b73e292eaf692cce4881a1fd50fc84fe5e3d2675a5f0bc4a84 - data: {"firstname":"rick","lastname":"sanchez"}
+ID 1: f5aee7808a43f214084800715d9dfc3dea65da9cfd3813165e3873fcdca5d4b7 - data: {"firstname":"rick","lastname":"sanchez"}
+
+
+Please select the ID you wish to certify: 1
+passphrase: ****************************************************************************
+? Verifying ID: f5aee7808a43f214084800715d9dfc3dea65da9cfd3813165e3873fcdca5d4b7 for address PNhiYW5Ledtu7wGEdSQGwrns8ddFYCBw1C Yes
+Transaction sent successfully with id 46dcce01c7dea4a7f1ae7e28cc9c3ac8e0cad782de6c398ea1f69c4d2ec75475
+```
+
+```
 persona testnet> account status PMxxtvwbjpdhRgqaBeVjYMMMqRwBQnEQ94
 { address: 'PMxxtvwbjpdhRgqaBeVjYMMMqRwBQnEQ94',
   unconfirmedBalance: '7500000000',
