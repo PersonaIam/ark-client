@@ -54,6 +54,16 @@ var networks = {
 
 };
 
+var algorithm = 'aes-256-ctr';
+
+function encrypt(data, password) {
+	var cipher = crypto.createCipher(algorithm, password);
+	var crypted = cipher.update(data, 'utf8', 'hex');
+	crypted += cipher.final('hex');
+
+	return crypted;
+}
+
 function getNetworkFromNethash(nethash){
   for(var n in networks){
     if(networks[n].nethash == nethash){
@@ -1025,7 +1035,103 @@ vorpal
   });
 
 vorpal
-  .command('account register <firstname> <lastname>', 'Registers the name provided with the account/address')
+  .command('account register-birthdate [date...]', 'Registers the date provided with the account (data is encrypted)')
+  .action(function (args, callback) {
+    var self = this;
+    if (!server) {
+      self.log("please connect to node or network before");
+      return callback();
+    }
+
+    async.waterfall([
+      function (seriesCb) {
+        getAccount(self, seriesCb);
+      },
+      function (account, seriesCb) {
+        var address = null;
+        var publicKey = null;
+        var passphrase = '';
+        if (account.passphrase) {
+          passphrase = account.passphrase;
+          var keys = personajs.crypto.getKeys(passphrase);
+          publicKey = keys.publicKey;
+          address = personajs.crypto.getAddress(publicKey);
+        } else if (account.publicKey) {
+          address = account.address;
+          publicKey = account.publicKey;
+        } else {
+          return seriesCb('No public key for account');
+        }
+
+        if(!args.date.length) {
+          return seriesCb('You need to provide a name');
+        }
+
+        var data = args.date.join(' ');
+        var type = 1; // birth date
+
+        data = Date.parse(data);
+        if (isNaN(data)) {
+          return seriesCb('invalid date format');
+        }
+
+        data = data.toString();
+
+        // sign identity data
+        var hash = crypto.createHash('sha256').update(data).digest();
+        dataSig = keys.sign(hash).toDER().toString("hex");
+
+        // encrypt date 
+        data = encrypt(data, 'password');
+
+        self.prompt({
+          type: 'confirm',
+          name: 'continue',
+          default: false,
+          message: "Registering birth date " + args.date.join(' ') + " to " + address
+        }, function (result) {
+          if (result.continue) {
+
+            var transaction = personajs.register.createRegistration(passphrase, type, JSON.stringify(data), dataSig);
+            ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
+              if (!transaction) {
+                return seriesCb('Failed to sign transaction with ledger');
+              }
+              return seriesCb(null, transaction);
+            });
+          } else {
+            return seriesCb("Aborted.")
+          }
+        });
+
+      },
+      function (transaction, seriesCb) {
+        postTransaction(self, transaction, function (err, response, body) {
+          if (err) {
+            seriesCb("Failed to send transaction: " + err);
+          }
+          else if (body.success) {
+            seriesCb(null, transaction);
+          }
+          else {
+            seriesCb("Failed to send transaction: " + body.error);
+          }
+        });
+      }
+    ], function (err, transaction) {
+      if (err) {
+        self.log(colors.red(err));
+      }
+      else {
+        self.log(colors.green("Transaction sent successfully with id " + transaction.id));
+      }
+      return callback();
+    });
+
+  });
+
+vorpal
+  .command('account register [name...]', 'Registers the name provided with the account/address')
   .action(function(args, callback) {
     var self = this;
     if (!server) {
@@ -1053,20 +1159,29 @@ vorpal
           return seriesCb('No public key for account');
         }
 
-        var data = {
-          firstname: args.firstname,
-          lastname: args.lastname
-        };
+        if(!args.name.length) {
+          return seriesCb('You need to provide a name');
+        }
+
+        var data = args.name.join(' ');
+        var type = 0; // name
+
+        // check type, sign, encrypt if necessary
+        var dataSig = null;
+
+        // sign identity data
+        var hash = crypto.createHash('sha256').update(data).digest();
+        dataSig = keys.sign(hash).toDER().toString("hex");
 
         self.prompt({
           type: 'confirm',
           name: 'continue',
           default: false,
-          message: "Registering " + data.firstname + " " + data.lastname + " as your name to " + address
+          message: "Registering " + data + " as your name to " + address
         }, function (result) {
           if (result.continue) {
 
-            var transaction = personajs.register.createRegistration(passphrase, 0, JSON.stringify(data));
+            var transaction = personajs.register.createRegistration(passphrase, type, data, dataSig);
             ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');

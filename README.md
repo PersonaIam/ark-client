@@ -46,7 +46,8 @@ persona> help
     account send <amount> <recipient>     Send <amount> persona tokens to <recipient>. <amount> format examples: PRS10, 100000
     account delegate <username>           Register new delegate with <username>
     account create                        Generate a new random cold account
-    account register <first> <last>       Register the name provided with the account
+    account register <name>               Register the name provided with the account
+    account register-birthdate <date>     Register the date provided with the account (data is encrypted)
     account verify <address>              Verify the identity of address
     account vanity <string>               Generate an address containing lowercased <string> (WARNING you could wait for long)
     message sign <message>                Sign a message
