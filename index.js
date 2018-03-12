@@ -36,7 +36,7 @@ var ledgerComm   = null;
 
 var networks = {
   testnet: {
-    nethash: "1e3d1b397d99f472d6b49c4f670ae917a13084708001dcf77249b136f88751e3",
+    nethash: "5ceaa37839023de939cfd5702584aaac09e37a904dad49c8d928b6770019a8b5",
     peers: [
       "5.135.75.64:4101",
       "5.135.75.65:4101",
@@ -46,7 +46,7 @@ var networks = {
     ]
   },
   localnet: {
-    nethash: "c0a05e20f07438ea30e20bf38855f2cf204d2d5706ac152d83496e625bee3d5b",
+    nethash: "527df5a4bf0fbd0dbe4b6c0a255c14a8451f4f3144afdf82bcb65b68ff963114",
     peers: [
       "127.0.0.1:4100"
     ]
@@ -1035,7 +1035,7 @@ vorpal
   });
 
 vorpal
-  .command('account register-birthdate [date...]', 'Registers the date provided with the account (data is encrypted)')
+  .command('account register-birthdate <password> [date...]', 'Registers the date provided with the account (date is encrypted)')
   .action(function (args, callback) {
     var self = this;
     if (!server) {
@@ -1082,7 +1082,12 @@ vorpal
         dataSig = keys.sign(hash).toDER().toString("hex");
 
         // encrypt date 
-        data = encrypt(data, 'password');
+        var password = args.password;
+        if(typeof password != "string" || password.length == 0) {
+          return seriesCb('You need to provide a password');
+        }
+
+        data = encrypt(data, password);
 
         self.prompt({
           type: 'confirm',
@@ -1092,7 +1097,7 @@ vorpal
         }, function (result) {
           if (result.continue) {
 
-            var transaction = personajs.register.createRegistration(passphrase, type, JSON.stringify(data), dataSig);
+            var transaction = personajs.register.createRegistration(passphrase, type, JSON.stringify(data), algorithm, dataSig);
             ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');
@@ -1181,7 +1186,7 @@ vorpal
         }, function (result) {
           if (result.continue) {
 
-            var transaction = personajs.register.createRegistration(passphrase, type, data, dataSig);
+            var transaction = personajs.register.createRegistration(passphrase, type, data, 'plain', dataSig);
             ledgerSignTransaction(seriesCb, transaction, account, function (transaction) {
               if (!transaction) {
                 return seriesCb('Failed to sign transaction with ledger');
