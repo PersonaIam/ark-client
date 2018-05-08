@@ -25,7 +25,7 @@
   "license": "MIT",
   "dependencies": {
     "arkjs": "github:arkecosystem/ark-js#master",
-    "personajs": "github:personaIam/persona-js#persona-dev",
+    "personajs": "github:personaIam/persona-js#master",
     "ascii-table": "0.0.9",
     "asciichart": "^0.1.7",
     "async": "^2.1.5",
